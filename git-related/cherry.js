@@ -128,11 +128,17 @@ const chooseCommit = async () => {
   const commitX = hashList.find(val => val.includes(chooseCommitStart.split(' ')[0]))
   const commitY = hashList.find(val => val.includes(chooseCommitEnd.split(' ')[0]))
 
-  return commitX, commitY
+  return [commitX, commitY]
 }
 
 const gitCherry = async () => {
-  chooseCommit()
+  const [commitX, commitY] = await chooseCommit()
+
+  shell.exec(`git checkout -b tempY ${commitY}`)
+  shell.exec(`git rebase ${commitX}`)
+  shell.exec(`git checkout -b cherry master`)
+  shell.exec(`git cherry-pick ${commitX}..cherry`)
+  shell.exec(`git branch -D tempY`)
 }
 
 module.exports = {
