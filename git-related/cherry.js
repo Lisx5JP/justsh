@@ -1,6 +1,7 @@
 const inquirer = require('inquirer')
 const shell = require('shelljs')
 const clear = require('clear')
+const { time } = require('../utils/time')
 
 // 首先会通过 git fetch remoteBranch 拿到非 origin 远程的内容
 // 然后通过 git log remoteBranch/main 之类的拿到对应分支的 commit
@@ -67,7 +68,7 @@ const chooseRemote = async () => {
   console.log('>> not choose remote')
 }
 
-const chooseBranch = async () => {
+const chooseRemoteBranch = async () => {
   const remoteName = await chooseRemote()
   shell.exec(`git fetch ${remoteName}`)
   const branchList = listRemoteBranch(remoteName)
@@ -86,7 +87,7 @@ const chooseBranch = async () => {
 }
 
 const chooseCommit = async () => {
-  const branchName = await chooseBranch()
+  const branchName = await chooseRemoteBranch()
   const outstr_hash = shell.exec(`git log ${branchName} --format=format:"%H --max-count=13`)
   const outstr = shell.exec(`git log ${branchName} --oneline --max-count=13`)
   clear()
@@ -131,13 +132,44 @@ const chooseCommit = async () => {
   return [commitX, commitY]
 }
 
+const listLocalBranch = async () => {
+  const outstr = shell.exec(`git branch`)
+  clear()
+
+  const list = outstr.stdout.split(/\n/).reduce((pre, cur) => {
+    if (cur && !pre.includes(cur)) {
+      pre.push(cur)
+    }
+    return pre
+  }, [])
+
+  return list
+}
+
+const chooseLocalBranch = async () => {
+  const branchList = await listLocalBranch()
+
+  const chooseList = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'name',
+      message: 'pick 的代码要合并到哪个分支？注：一般为主分支或者专门承接代码同步操作的 cherry 分支',
+      choices: branchList,
+      default: 0,
+    },
+  ])
+
+  return chooseList.name
+}
+
 const gitCherry = async () => {
   const [commitX, commitY] = await chooseCommit()
+  const baseBranch = await chooseLocalBranch()
 
   shell.exec(`git checkout -b tempY ${commitY}`)
   shell.exec(`git rebase ${commitX}`)
-  shell.exec(`git checkout -b cherry master`)
-  shell.exec(`git cherry-pick ${commitX}..cherry`)
+  shell.exec(`git checkout -b cherry-${time} ${baseBranch}`)
+  shell.exec(`git cherry-pick ${commitX}..cherry-${time}`)
   shell.exec(`git branch -D tempY`)
 }
 
