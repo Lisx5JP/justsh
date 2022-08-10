@@ -1,0 +1,6 @@
+node_modules
+*.log
+*.temp
+.vscode
+.DS_Store
+.npmrc
