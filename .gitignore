@@ -1,6 +1,22 @@
-node_modules
-*.log
-*.temp
-.vscode
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+**/node_modules
+
+# misc
 .DS_Store
-.npmrc
+npm-debug.log*
+yarn-error.log
+
+/coverage
+.idea
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+*bak
+
+# visual studio code
+.history
+*.log
+functions/*
+.temp/**
