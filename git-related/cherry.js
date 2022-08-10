@@ -3,22 +3,48 @@ const shell = require('shelljs')
 const clear = require('clear')
 const { time } = require('../utils/time')
 
-// 首先会通过 git fetch remoteBranch 拿到非 origin 远程的内容
-// 然后通过 git log remoteBranch/main 之类的拿到对应分支的 commit
-// 看自己要选择哪些 commit 进行合并 (这里假设是 X..Y)
+// First, use git fetch remoteBranch to get the remote commits
+// Then, use command like git log remoteBranch/main to get the commit hash we want
+// Now, we can choose which commit we want to use (eg, X..Y)
 
-// 每次从 cherry-xxxx 分支开始操作，此分支只负责同步代码
-// 1. `git checkout -b tempY Y` 基于 commit Y 新建分支 tempY，会自动切换到 tempY
-// 2. `git rebase X` 在 tempY 分支上，基于 commit X rebase
-// 3. `git checkout -b cherry ${localBranch}` 在 rebase 之后的 tempY 分支上，基于 localBranch 分支，新建 cherry 分支
-// 4. `git cherry-pick X..cherry` 此时到了 cherry 分支，然后 pick 从 commit X 到 cherry 分支的代码
-// 5. (optional) `git branch -D tempY` 最后删除 tempY 分支，pick 出的代码，会合并到 cherry 分支上
+// Start from a branch like cherry-xxxx, which is only used for sync remote branch
+// 1. `git checkout -b tempY Y` create new branch tempY based on commitY, and checkout to tempY
+// 2. `git rebase X` rebase from commitX, on tempY branch
+// 3. `git checkout -b cherry-${time} ${localBranch}` after rebase, create new branch cherry-${time}
+// 4. `git cherry-pick X..cherry-${time}` now, we are on branch cherry-${time}, and then execute `cherry-pick`
+// 5. (optional) `git branch -D tempY` delete branch tempY, and the code we picked already in branch cherry-${time}
 
 // User Interaction
 // 1. Choose remote branch
 // 2. Choose commitX
 // 3. Choose commitY
 // 4. Choose local base branch
+
+let lang = 'en'
+const detectLang = () => {
+  const outstr = shell.exec(`locale | grep LANG`)
+  clear()
+  if (outstr.stdout.includes('zh_CN')) lang = 'zh'
+}
+
+const msgMap = {
+  en: {
+    chooseRemote: 'Please select a remote repo to pick:',
+    loading: 'Please wait, fetching',
+    chooseRemoteBranch: 'Please select a remote branch to pick:',
+    commitX: 'Please select a commit as the start point:',
+    commitY: 'Please select a commit as the end point:',
+    chooseLocalBranch: 'Which branch to merge the pick code into? Note: typically the main branch or a cherry branch that specializes in accepting code synchronization operations',
+  },
+  zh: {
+    chooseRemote: '请选择你要 pick 的远程仓库：',
+    loading: '请稍等, 拉取远程分支代码中',
+    chooseRemoteBranch: '请选择你要 pick 的远程仓库分支：',
+    commitX: '请选择你要 pick 的 commit 起始点：',
+    commitY: '请选择你要 pick 的 commit 终止点：',
+    chooseLocalBranch: 'pick 的代码要合并到哪个分支？注：一般为主分支或者专门承接代码同步操作的 cherry 分支',
+  }
+}
 
 const listRemote = () => {
   const outstr = shell.exec(`git remote`)
@@ -58,7 +84,7 @@ const chooseRemote = async () => {
     {
       type: 'list',
       name: 'name',
-      message: '请选择你要 pick 的远程仓库',
+      message: msgMap[lang].chooseRemote,
       choices: remoteList,
       default: 0,
     },
@@ -67,12 +93,11 @@ const chooseRemote = async () => {
   if (chooseList.name) {
     return chooseList.name
   }
-  console.log('>> not choose remote')
 }
 
 const chooseRemoteBranch = async () => {
   const remoteName = await chooseRemote()
-  console.log(`Please wait, fetching ${remoteName}...`)
+  console.log(`${msgMap[lang].loading} ${remoteName}...`)
   shell.exec(`git fetch ${remoteName}`)
   const branchList = listRemoteBranch(remoteName)
 
@@ -80,7 +105,7 @@ const chooseRemoteBranch = async () => {
     {
       type: 'list',
       name: 'name',
-      message: '请选择你要 pick 的远程仓库分支',
+      message: msgMap[lang].chooseRemoteBranch,
       choices: branchList,
       default: 0,
     },
@@ -113,7 +138,7 @@ const chooseCommit = async () => {
     {
       type: 'list',
       name: 'name',
-      message: '请选择你要 pick 的 commit 起始点',
+      message: msgMap[lang].commitX,
       choices: list,
       default: 0,
     },
@@ -123,7 +148,7 @@ const chooseCommit = async () => {
     {
       type: 'list',
       name: 'name',
-      message: '请选择你要 pick 的 commit 终止点',
+      message: msgMap[lang].commitY,
       choices: list,
       default: 0,
     },
@@ -157,7 +182,7 @@ const chooseLocalBranch = async () => {
     {
       type: 'list',
       name: 'name',
-      message: 'pick 的代码要合并到哪个分支？注：一般为主分支或者专门承接代码同步操作的 cherry 分支',
+      message: msgMap[lang].chooseLocalBranch,
       choices: branchList,
       default: 0,
     },
@@ -167,6 +192,7 @@ const chooseLocalBranch = async () => {
 }
 
 const gitCherry = async () => {
+  detectLang()
   const [commitX, commitY] = await chooseCommit()
   const baseBranch = await chooseLocalBranch()
   const currentTime = time
