@@ -4,7 +4,7 @@ const { gitCherry } = require('./git-related/cherry')
 
 program
   // .option('-r, --remote')
-  .option('-c, --cherry')
+  .option('-cherry, --cherry')
 
   .action((options) => {
     console.log('>>options:', options)

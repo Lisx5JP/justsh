@@ -10,13 +10,15 @@ const { time } = require('../utils/time')
 // 每次从 cherry-xxxx 分支开始操作，此分支只负责同步代码
 // 1. `git checkout -b tempY Y` 基于 commit Y 新建分支 tempY，会自动切换到 tempY
 // 2. `git rebase X` 在 tempY 分支上，基于 commit X rebase
-// 3. `git checkout -b cherry master` 在 rebase 之后的 tempY 分支上，基于 master 分支，新建 cherry 分支
+// 3. `git checkout -b cherry ${localBranch}` 在 rebase 之后的 tempY 分支上，基于 localBranch 分支，新建 cherry 分支
 // 4. `git cherry-pick X..cherry` 此时到了 cherry 分支，然后 pick 从 commit X 到 cherry 分支的代码
 // 5. (optional) `git branch -D tempY` 最后删除 tempY 分支，pick 出的代码，会合并到 cherry 分支上
 
-// 选择 remoteBranch 的名字 (脚本选择当前源的默认分支)
-// 选择 commitX
-// 选择 commitY
+// User Interaction
+// 1. Choose remote branch
+// 2. Choose commitX
+// 3. Choose commitY
+// 4. Choose local base branch
 
 const listRemote = () => {
   const outstr = shell.exec(`git remote`)
@@ -35,8 +37,8 @@ const listRemote = () => {
   return list
 }
 
-const listRemoteBranch = () => {
-  const outstr = shell.exec(`git branch -r`)
+const listRemoteBranch = (name) => {
+  const outstr = shell.exec(`git branch -r --list '${name}*'`)
   clear()
 
   const list = outstr.stdout.split(/\n/).reduce((pre, cur) => {
@@ -70,6 +72,7 @@ const chooseRemote = async () => {
 
 const chooseRemoteBranch = async () => {
   const remoteName = await chooseRemote()
+  console.log(`Please wait, fetching ${remoteName}...`)
   shell.exec(`git fetch ${remoteName}`)
   const branchList = listRemoteBranch(remoteName)
 
@@ -88,8 +91,8 @@ const chooseRemoteBranch = async () => {
 
 const chooseCommit = async () => {
   const branchName = await chooseRemoteBranch()
-  const outstr_hash = shell.exec(`git log ${branchName} --format=format:"%H --max-count=13`)
-  const outstr = shell.exec(`git log ${branchName} --oneline --max-count=13`)
+  const outstr_hash = shell.exec(`git log ${branchName} --format=format:"%H" --max-count=40`)
+  const outstr = shell.exec(`git log ${branchName} --oneline --max-count=40`)
   clear()
 
   const list = outstr.stdout.split(/\n/).reduce((pre, cur) => {
@@ -126,8 +129,8 @@ const chooseCommit = async () => {
     },
   ])
 
-  const commitX = hashList.find(val => val.includes(chooseCommitStart.split(' ')[0]))
-  const commitY = hashList.find(val => val.includes(chooseCommitEnd.split(' ')[0]))
+  const commitX = hashList.find(val => val.includes(chooseCommitStart.name.split(' ')[0]))
+  const commitY = hashList.find(val => val.includes(chooseCommitEnd.name.split(' ')[0]))
 
   return [commitX, commitY]
 }
@@ -138,7 +141,8 @@ const listLocalBranch = async () => {
 
   const list = outstr.stdout.split(/\n/).reduce((pre, cur) => {
     if (cur && !pre.includes(cur)) {
-      pre.push(cur)
+      const prune = cur.replace(/\*/, "").trim()
+      pre.push(prune)
     }
     return pre
   }, [])
@@ -165,11 +169,12 @@ const chooseLocalBranch = async () => {
 const gitCherry = async () => {
   const [commitX, commitY] = await chooseCommit()
   const baseBranch = await chooseLocalBranch()
+  const currentTime = time
 
   shell.exec(`git checkout -b tempY ${commitY}`)
   shell.exec(`git rebase ${commitX}`)
-  shell.exec(`git checkout -b cherry-${time} ${baseBranch}`)
-  shell.exec(`git cherry-pick ${commitX}..cherry-${time}`)
+  shell.exec(`git checkout -b cherry-${currentTime} ${baseBranch}`)
+  shell.exec(`git cherry-pick ${commitX}..cherry-${currentTime}`)
   shell.exec(`git branch -D tempY`)
 }
 
