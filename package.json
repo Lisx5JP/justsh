@@ -1,7 +1,8 @@
 {
   "name": "justsh",
   "version": "1.0.0",
-  "description": "",
+  "description": "Some commonly used complex scripts, including cherry-pick, etc.",
+  "keywords": ["script", "cherry-pick"],
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
