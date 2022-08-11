@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 const { program } = require('commander')
 
 const { gitCherry } = require('./git-related/cherry')

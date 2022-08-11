@@ -31,8 +31,22 @@ The way to add a new remote branch:
 git remote add <name> <git-repo-url>
 ```
 
-**Command:**
+Command:
 
 ```bash
 justsh -cherry
+```
+
+Resolve Conflict:
+
+When `cherry-pick` start, there may be conflicts. What you should do is to solve the conflicts and then execute:
+
+```bash
+git cherry-pick --continue
+```
+
+At the end, you could delete the `tempY` branch via:
+
+```bash
+git branch -D tempY
 ```

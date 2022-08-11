@@ -201,7 +201,6 @@ const gitCherry = async () => {
   shell.exec(`git rebase ${commitX}`)
   shell.exec(`git checkout -b cherry-${currentTime} ${baseBranch}`)
   shell.exec(`git cherry-pick ${commitX}..cherry-${currentTime}`)
-  shell.exec(`git branch -D tempY`)
 }
 
 module.exports = {
