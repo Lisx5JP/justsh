@@ -1,6 +1,6 @@
 {
   "name": "justsh",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Some commonly used complex scripts, including cherry-pick, etc.",
   "keywords": ["script", "cherry-pick"],
   "main": "index.js",
@@ -14,8 +14,8 @@
     "type": "git",
     "url": "git+https://github.com/Lisx5JP/justsh.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Lisx5JP",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Lisx5JP/justsh/issues"
   },
