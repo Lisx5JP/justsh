@@ -42,6 +42,7 @@ Resolve Conflict:
 When `cherry-pick` start, there may be conflicts. What you should do is to solve the conflicts and then execute:
 
 ```bash
+git add -A
 git cherry-pick --continue
 ```
 

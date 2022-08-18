@@ -198,9 +198,13 @@ const gitCherry = async () => {
   const currentTime = time
 
   shell.exec(`git checkout -b tempY ${commitY}`)
+  console.log('🐣 Create a new branch tempY')
   shell.exec(`git rebase ${commitX}`)
+  console.log(`🐣 Rebase tempY with ${commitX}`)
   shell.exec(`git checkout -b cherry-${currentTime} ${baseBranch}`)
-  shell.exec(`git cherry-pick ${commitX}..cherry-${currentTime}`)
+  console.log('🐣 Checkout a new branch:', `cherry-${currentTime}`, 'from', baseBranch)
+  console.log('🍒', `git cherry-pick ${commitX}..tempY`)
+  shell.exec(`git cherry-pick ${commitX}..tempY`)
 }
 
 module.exports = {
