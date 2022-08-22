@@ -1,22 +1,36 @@
 # 🤖 justsh
 
+## What is justsh?
+
+**justsh** is actually a bunch of scripts which can be used in daily development, but `justsh` simplified it into a set of interactive instruction. Currently, the following commands are supported:
+
+- `-cherry`
+
 ## Usage
+
+Install it with flag `-g`, then you can use it from anywhere in your computer.
 
 ```bash
 npm i justsh -g
 ```
 
-### 1. -cherry
+## 1. `-cherry`
 
-**Use Case:**
+### Why use this when git already has `cherry-pick`?
 
-You don't care about preserving the exact merging history of a branch and just want to `cherry-pick` a linearized version of it.
+Note: The script is based on this [answer](https://stackoverflow.com/questions/9229301/git-cherry-pick-says-38c74d-is-a-merge-but-no-m-option-was-given/36989757#36989757).
 
-For example: as a frontend developer, maybe you need to maintain a base class back office system, as well as business related back office systems. The former is not business related, the latter is business related, **and the latter is forked from the former (which means they share the same code structure).** The former will still be updated, and you can use the `-cherry` command to synchronize the code from the former to the latter.
+Sometimes, when you use `cherry-pick`, you may encountered some error like:
 
-Note: This script is based on this [answer](https://stackoverflow.com/questions/9229301/git-cherry-pick-says-38c74d-is-a-merge-but-no-m-option-was-given/36989757#36989757).
+```bash
+fatal: Commit xxxx is a merge but no -m option was given.
+```
 
-**\* Before Starting**
+But at the same time, you don't care about preserving the exact merging history of a branch and just want to `cherry-pick` a linearized version of it, the you can use `justsh -cherry` to simplify this.
+
+For example: as a frontend developer, maybe you need to maintain a base admin management system, as well as business related management systems. The former is not business related, the latter is business related, **and the latter is forked from the former (which means they share the same code structure).** The former will still be updated, then you can use the `-cherry` command to synchronize the code from the former to the latter.
+
+**\* Before Starting** (important)
 
 You should already set another remote branch to your project, which you could check with `git remote`. The output should be something like:
 
@@ -37,7 +51,7 @@ Command:
 justsh -cherry
 ```
 
-Resolve Conflict:
+**Resolve Conflict:**
 
 When `cherry-pick` start, there may be conflicts. What you should do is to solve the conflicts and then execute:
 
@@ -46,7 +60,7 @@ git add -A
 git cherry-pick --continue
 ```
 
-At the end, you could delete the `tempY` branch via:
+At the end, you should delete the `tempY` branch via:
 
 ```bash
 git branch -D tempY
